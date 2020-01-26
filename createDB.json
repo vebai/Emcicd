@@ -1,0 +1,52 @@
+{
+ "AWSTemplateFormatVersion": "2010-09-09",
+
+"Resources": {
+"EksDbSG" : {
+   "Type" : "AWS::EC2::SecurityGroup",
+   "Properties" : {
+      "GroupDescription" : "Enable DB access from ELK worker nodes",
+      "SecurityGroupIngress" : [
+         {"IpProtocol" : "tcp", "FromPort" : "3306", "ToPort" : "3306", "CidrIp" : "{"Fn::ImportValue" : {"Fn::Sub" : "${Elk-privatesubnetNameParameter}-CIDR"}}"},
+      ]
+      "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "EKS Database Security group"
+                }
+            ]
+   }
+}
+
+"QuantumDb" : {
+ "Type" : "AWS::RDS::DBInstance",
+ "Properties" : {
+     "DBSecurityGroups" : [ { "Ref" : "EksDbSG" } ,"sg-0777a81e46dd0291e"],
+     "AllocatedStorage" : "5",
+     "DBInstanceClass" : "db.m1.small",
+     "Engine" : "MySQL",
+     "MasterUsername" : "Admin",
+     "MultiAZ" : true,
+     "MasterUserPassword" : "Airforceone",
+     "DBSubnetGroupName": {"sng-0777a81e46dd0291i"},
+     "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "EKS SQL Database"
+                }
+            ]
+ },
+ "DeletionPolicy" : "Snapshot"
+}
+
+"Outputs" : {
+  "DbEndpoint" : {
+    "Description" : "DB Connection endpoint",
+    "Value" : "{"Fn::GetAtt": ["QuantumDb","Endpoint.Address"]}"
+    "Export" : {
+      "Name" : "{"Fn::GetAtt": ["QuantumDb","Endpoint.Address"]}"
+    }
+  }
+
+ }
+}

@@ -1,0 +1,120 @@
+pipeline {
+    agent any 
+    
+     parameters {
+//        string(name: 'DB_PASS', defaultValue: '', description: 'Enter DB password')
+    }
+    
+    environment {
+        DISABLE_AUTH = 'true'
+        DB_USERNAME    = 'admin'
+//      DB_PASS        = "${para.DB_PASS}"
+    }
+    stages {
+        stage('Build fargate Kubernetes cluster with eksctl') {
+            steps {
+                sh  'echo "eksctl version is"'
+                sh  '/usr/local/bin/eksctl version'
+                sh """/usr/local/bin/eksctl create cluster \
+                      --name QuantumFlightsEKS --version 1.14 --region eu-west-1 \
+                      --tags Company=Quantum --tags Environment=Prod \
+                      --tags Application=FlightsBookingSystem --fargate
+                    """
+                   
+            }
+        }
+        stage('Test cluster configuration') {
+           
+            steps{
+                sh 'echo "Test that your kubectl configuration is correct"'
+//              sh '/usr/local/bin/kubectl get svc'
+//              sh '/usr/local/bin/kubectl get nodes'
+                
+            }
+        }
+        
+     stage('Build database instance, schema and load data with docker') {
+     
+            environment {
+            
+            }
+        
+           steps{
+               sh  'echo "Building the database instance"'
+//             sh  '/usr/local/bin/aws cloudformation create-stack --stack-name dbstack \
+//                    --template-body file://createDB.json'
+               sh  'echo "Building the database schema with msql docker container"'
+//             sh  'DB_endpoint = aws'
+//             sh  '/usr/local/bin/docker pull mysql'
+//             sh  '/usr/local/bin/dockerdocker run --name mysqltest -e MYSQL_ROOT_PASSWORD=${env.DB_PASS} -d mysql'
+//             sh  '/usr/local/bin/docker exec mysqltest sh -c /
+//            'exec -h${DB_endpoint} -P 3306 -u${env.DB_USERNAME} -p${env.DB_PASS} > ./Dschema.sq'
+           }   
+       }
+       
+       stage('Build the docker application image for EKS cluster') {
+           
+            steps{
+              sh  'echo "Building images"'  
+//            sh  '/usr/local/bin/docker image build -t pydb:v1'
+              
+              
+            }
+        }
+        
+        stage('Deploy containers to the EKS cluster') {
+            
+            steps{
+                sh  'echo "Configure pods with in the cluster yamal"'
+//              sh  '/usr/local/bin/kubectl create -f deploy.yml'
+            }
+        }
+        
+        stage('Test pod execution') {
+            
+            steps{
+             sh  'echo test if 2 pods hane been created'   
+//           sh '/usr/local/bin/kubectl get pods'
+            }
+        }
+        
+         stage('Auto scale fargate') {
+            
+            steps{
+             sh  'echo "Auto scale fargate compute"'   
+//           sh '/usr/local/bin/kubectl create -f scaling.yml'
+            }
+        }
+        
+     
+       stage('Add logic to delete eks cluster after tests') {
+            
+            steps{
+                sh  'echo "Should cluster be deleted?"'
+//              input "Does the staging environment look ok?"
+//              sh  '/usr/local/bin/eksctl delete cluster --name EmiratesFlightsEKS --region eu-west-1'
+            }
+        } 
+        
+    }
+        
+        
+    post {
+        
+        always {
+           sh 'echo "Send email or slack message to confirm build status"
+        }
+        success {
+           sh  'echo "Send a success message"'
+ //            mail to: 'devops_team@example.com',
+ //            subject: "Pipeline succeded",
+ //            body: "All is good "
+        }
+        failure {
+            sh  'echo "Send a failiure message"'
+//          mail to: 'devops_team@example.com',
+//          subject: "Pipeline succeded",
+//          body: "Something is wrong "
+        }
+    }    
+}

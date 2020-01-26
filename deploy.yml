@@ -1,0 +1,19 @@
+---
+ apiVersion: extensions/v1beta1
+ kind: Deployment
+ metadata:
+   name: python-db-app
+ spec:
+   selector:
+     matchLabels:
+       app: python-db-app 
+   replicas: 2  # tells deployment to run 2 pods described by the template
+   template:    # create pods using definitions in this template
+     metadata:
+       labels: 
+         app: python-db-app
+     spec:
+       containers:
+         - name: python-db-app
+           image: pydb:v1
+           
